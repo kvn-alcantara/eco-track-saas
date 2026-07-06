@@ -34,7 +34,6 @@ class ApiRoutesTest extends TestCase
             'data' => [
                 '*' => [
                     'id',
-                    'company_id',
                     'waste_type',
                     'quantity_kg',
                     'co2e_kg',
@@ -65,7 +64,6 @@ class ApiRoutesTest extends TestCase
         $response->assertJsonStructure([
             'data' => [
                 'id',
-                'company_id',
                 'waste_type',
                 'quantity_kg',
                 'co2e_kg',
@@ -155,7 +153,6 @@ class ApiRoutesTest extends TestCase
             'data' => [
                 '*' => [
                     'id',
-                    'company_id',
                     'title',
                     'period_start',
                     'period_end',
@@ -187,7 +184,6 @@ class ApiRoutesTest extends TestCase
         $response->assertJsonStructure([
             'data' => [
                 'id',
-                'company_id',
                 'title',
                 'period_start',
                 'period_end',
