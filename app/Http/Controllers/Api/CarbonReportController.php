@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\StoreCarbonReportRequest;
 use App\Http\Resources\CarbonReportResource;
 use App\Models\CarbonReport;
 use App\Services\CarbonReportService;
@@ -28,20 +29,12 @@ class CarbonReportController extends Controller
         return (new CarbonReportResource($carbonReport))->response();
     }
 
-    public function store(Request $request): JsonResponse
+    public function store(StoreCarbonReportRequest $request): JsonResponse
     {
-        $validated = $request->validate([
-            'title' => ['required', 'string', 'max:120'],
-            'period_start' => ['required', 'date'],
-            'period_end' => ['required', 'date', 'after_or_equal:period_start'],
-            'total_waste_kg' => ['required', 'numeric', 'min:0'],
-            'total_emissions_kg' => ['required', 'numeric', 'min:0'],
-        ]);
-
         $report = $this->service->create(
             $request->user()->company,
             $request->user(),
-            $validated
+            $request->validated()
         );
 
         return (new CarbonReportResource($report))->response()->setStatusCode(Response::HTTP_CREATED);

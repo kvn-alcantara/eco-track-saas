@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\StoreWasteRecordRequest;
+use App\Http\Requests\UpdateWasteRecordRequest;
 use App\Http\Resources\WasteRecordResource;
 use App\Models\WasteRecord;
 use App\Services\WasteRecordService;
@@ -28,38 +30,22 @@ class WasteRecordController extends Controller
         return (new WasteRecordResource($wasteRecord))->response();
     }
 
-    public function store(Request $request): JsonResponse
+    public function store(StoreWasteRecordRequest $request): JsonResponse
     {
-        $validated = $request->validate([
-            'waste_type' => ['required', 'string', 'max:80'],
-            'quantity_kg' => ['required', 'numeric', 'min:0.01'],
-            'co2e_kg' => ['required', 'numeric', 'min:0'],
-            'occurred_at' => ['required', 'date'],
-            'notes' => ['nullable', 'string', 'max:1000'],
-        ]);
-
         $record = $this->service->create(
             $request->user()->company,
             $request->user(),
-            $validated
+            $request->validated()
         );
 
         return (new WasteRecordResource($record))->response()->setStatusCode(Response::HTTP_CREATED);
     }
 
-    public function update(Request $request, WasteRecord $wasteRecord): JsonResponse
+    public function update(UpdateWasteRecordRequest $request, WasteRecord $wasteRecord): JsonResponse
     {
         $this->authorize('update', $wasteRecord);
 
-        $validated = $request->validate([
-            'waste_type' => ['sometimes', 'string', 'max:80'],
-            'quantity_kg' => ['sometimes', 'numeric', 'min:0.01'],
-            'co2e_kg' => ['sometimes', 'numeric', 'min:0'],
-            'occurred_at' => ['sometimes', 'date'],
-            'notes' => ['sometimes', 'nullable', 'string', 'max:1000'],
-        ]);
-
-        $record = $this->service->update($wasteRecord, $validated);
+        $record = $this->service->update($wasteRecord, $request->validated());
 
         return (new WasteRecordResource($record))->response();
     }
