@@ -19,6 +19,8 @@ class CarbonReportController extends Controller
 
     public function index(Request $request): JsonResponse
     {
+        $this->authorize('viewAny', CarbonReport::class);
+
         $reports = $this->service->listByCompany($request->user()->company);
 
         return CarbonReportResource::collection($reports)->response();
@@ -33,6 +35,8 @@ class CarbonReportController extends Controller
 
     public function store(StoreCarbonReportRequest $request): JsonResponse
     {
+        $this->authorize('create', CarbonReport::class);
+
         $report = $this->service->create(
             $request->user()->company,
             $request->user(),
@@ -44,6 +48,8 @@ class CarbonReportController extends Controller
 
     public function generate(GenerateCarbonReportRequest $request): JsonResponse
     {
+        $this->authorize('generate', CarbonReport::class);
+
         $report = $this->service->generate(
             $request->user()->company,
             $request->user(),
@@ -54,5 +60,14 @@ class CarbonReportController extends Controller
             'message' => 'Seu relatório está sendo processado',
             'data' => new CarbonReportResource($report),
         ], Response::HTTP_ACCEPTED);
+    }
+
+    public function approve(Request $request, CarbonReport $carbonReport): JsonResponse
+    {
+        $this->authorize('approve', $carbonReport);
+
+        $report = $this->service->approve($carbonReport, $request->user());
+
+        return (new CarbonReportResource($report))->response();
     }
 }

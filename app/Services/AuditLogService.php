@@ -5,9 +5,17 @@ namespace App\Services;
 use App\Models\AuditLog;
 use App\Models\User;
 use App\Models\WasteRecord;
+use Illuminate\Pagination\LengthAwarePaginator;
 
 class AuditLogService
 {
+    public function listByCompany(int $companyId, int $perPage = 15): LengthAwarePaginator
+    {
+        return AuditLog::where('company_id', $companyId)
+            ->latest()
+            ->paginate($perPage);
+    }
+
     public function recordWasteRecordChange(
         WasteRecord $wasteRecord,
         ?User $actor,

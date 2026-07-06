@@ -2,32 +2,46 @@
 
 namespace App\Policies;
 
-use App\Models\User;
 use App\Models\CarbonReport;
+use App\Models\User;
 
 class CarbonReportPolicy
 {
-    /**
-     * Determine whether the user can view the model.
-     */
+    public function viewAny(User $user): bool
+    {
+        return (bool) $user->company_id;
+    }
+
     public function view(User $user, CarbonReport $carbonReport): bool
     {
         return $user->company_id === $carbonReport->company_id;
     }
 
-    /**
-     * Determine whether the user can update the model.
-     */
-    public function update(User $user, CarbonReport $carbonReport): bool
+    public function create(User $user): bool
     {
-        return $user->company_id === $carbonReport->company_id;
+        return (bool) $user->company_id && $user->role->canManageReports();
     }
 
-    /**
-     * Determine whether the user can delete the model.
-     */
+    public function generate(User $user): bool
+    {
+        return (bool) $user->company_id && $user->role->canManageReports();
+    }
+
+    public function approve(User $user, CarbonReport $carbonReport): bool
+    {
+        return $user->company_id === $carbonReport->company_id
+            && $user->role->canApproveReports();
+    }
+
+    public function update(User $user, CarbonReport $carbonReport): bool
+    {
+        return $user->company_id === $carbonReport->company_id
+            && $user->role->canManageReports();
+    }
+
     public function delete(User $user, CarbonReport $carbonReport): bool
     {
-        return $user->company_id === $carbonReport->company_id;
+        return $user->company_id === $carbonReport->company_id
+            && $user->role->canManageReports();
     }
 }

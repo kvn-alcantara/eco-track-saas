@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use App\Enums\WasteType;
+use App\Models\WasteRecord;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -10,7 +11,7 @@ class StoreWasteRecordRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true;
+        return $this->user()->can('create', WasteRecord::class);
     }
 
     public function rules(): array
