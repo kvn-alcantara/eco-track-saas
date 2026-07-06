@@ -23,7 +23,7 @@ class CarbonReportGenerationTest extends TestCase
 
     public function test_unauthenticated_user_cannot_trigger_report_generation(): void
     {
-        $response = $this->postJson('/api/reports/generate', [
+        $response = $this->postJson('/api/v1/reports/generate', [
             'title' => 'Anual 2026',
             'period_start' => '2026-01-01',
             'period_end' => '2026-12-31',
@@ -41,7 +41,7 @@ class CarbonReportGenerationTest extends TestCase
 
         Sanctum::actingAs($user);
 
-        $response = $this->postJson('/api/reports/generate', [
+        $response = $this->postJson('/api/v1/reports/generate', [
             'title' => 'Anual 2026',
             'period_start' => '2026-01-01',
             'period_end' => '2026-12-31',
@@ -79,12 +79,12 @@ class CarbonReportGenerationTest extends TestCase
         Sanctum::actingAs($user);
 
         // Missing fields
-        $response = $this->postJson('/api/reports/generate', []);
+        $response = $this->postJson('/api/v1/reports/generate', []);
         $response->assertStatus(422);
         $response->assertJsonValidationErrors(['title', 'period_start', 'period_end']);
 
         // End date before start date
-        $response = $this->postJson('/api/reports/generate', [
+        $response = $this->postJson('/api/v1/reports/generate', [
             'title' => 'Anual 2026',
             'period_start' => '2026-12-31',
             'period_end' => '2026-01-01',
