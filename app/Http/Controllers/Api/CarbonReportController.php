@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\CarbonReportResource;
 use App\Models\CarbonReport;
 use App\Services\CarbonReportService;
 use Illuminate\Http\JsonResponse;
@@ -17,20 +18,14 @@ class CarbonReportController extends Controller
     {
         $reports = $this->service->listByCompany($request->user()->company);
 
-        return response()->json([
-            'data' => $reports->items(),
-            'meta' => [
-                'total' => $reports->total(),
-                'per_page' => $reports->perPage(),
-                'current_page' => $reports->currentPage(),
-            ]
-        ]);
+        return CarbonReportResource::collection($reports)->response();
     }
 
     public function show(Request $request, CarbonReport $carbonReport): JsonResponse
     {
         $this->authorize('view', $carbonReport);
-        return response()->json(['data' => $carbonReport]);
+
+        return (new CarbonReportResource($carbonReport))->response();
     }
 
     public function store(Request $request): JsonResponse
@@ -49,6 +44,6 @@ class CarbonReportController extends Controller
             $validated
         );
 
-        return response()->json(['data' => $report], Response::HTTP_CREATED);
+        return (new CarbonReportResource($report))->response()->setStatusCode(Response::HTTP_CREATED);
     }
 }

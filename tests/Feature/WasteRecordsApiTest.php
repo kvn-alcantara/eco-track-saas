@@ -35,7 +35,6 @@ class WasteRecordsApiTest extends TestCase
             'data' => [
                 '*' => [
                     'id',
-                    'company_id',
                     'waste_type',
                     'quantity_kg',
                     'co2e_kg',
@@ -44,6 +43,9 @@ class WasteRecordsApiTest extends TestCase
                 ]
             ]
         ]);
+        $response->assertJsonMissingPath('data.0.company_id');
+        $response->assertJsonMissingPath('data.0.recorded_by_user_id');
+        $response->assertJsonMissingPath('data.0.audit_snapshot');
         $response->assertJsonCount(3, 'data');
     }
 
@@ -66,7 +68,6 @@ class WasteRecordsApiTest extends TestCase
         $response->assertJsonStructure([
             'data' => [
                 'id',
-                'company_id',
                 'waste_type',
                 'quantity_kg',
                 'co2e_kg',
@@ -74,6 +75,9 @@ class WasteRecordsApiTest extends TestCase
                 'notes',
             ]
         ]);
+        $response->assertJsonMissingPath('data.company_id');
+        $response->assertJsonMissingPath('data.recorded_by_user_id');
+        $response->assertJsonMissingPath('data.audit_snapshot');
 
         $this->assertDatabaseHas('waste_records', [
             'company_id' => $company->id,
@@ -93,10 +97,19 @@ class WasteRecordsApiTest extends TestCase
         $response = $this->getJson("/api/v1/waste-records/{$record->id}");
 
         $response->assertOk();
-        $response->assertJsonFragment([
-            'id' => $record->id,
-            'waste_type' => $record->waste_type,
+        $response->assertJsonStructure([
+            'data' => [
+                'id',
+                'waste_type',
+                'quantity_kg',
+                'co2e_kg',
+                'occurred_at',
+                'notes',
+            ]
         ]);
+        $response->assertJsonMissingPath('data.company_id');
+        $response->assertJsonMissingPath('data.recorded_by_user_id');
+        $response->assertJsonMissingPath('data.audit_snapshot');
     }
 
     public function test_authenticated_user_can_update_waste_record(): void
@@ -113,6 +126,16 @@ class WasteRecordsApiTest extends TestCase
         ]);
 
         $response->assertOk();
+        $response->assertJsonStructure([
+            'data' => [
+                'id',
+                'waste_type',
+                'quantity_kg',
+                'co2e_kg',
+                'occurred_at',
+                'notes',
+            ]
+        ]);
         $this->assertDatabaseHas('waste_records', [
             'id' => $record->id,
             'quantity_kg' => 200.0,

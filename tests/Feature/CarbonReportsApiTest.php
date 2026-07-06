@@ -35,7 +35,6 @@ class CarbonReportsApiTest extends TestCase
             'data' => [
                 '*' => [
                     'id',
-                    'company_id',
                     'title',
                     'period_start',
                     'period_end',
@@ -45,6 +44,9 @@ class CarbonReportsApiTest extends TestCase
                 ]
             ]
         ]);
+        $response->assertJsonMissingPath('data.0.company_id');
+        $response->assertJsonMissingPath('data.0.generated_by_user_id');
+        $response->assertJsonMissingPath('data.0.summary');
         $response->assertJsonCount(2, 'data');
     }
 
@@ -67,7 +69,6 @@ class CarbonReportsApiTest extends TestCase
         $response->assertJsonStructure([
             'data' => [
                 'id',
-                'company_id',
                 'title',
                 'period_start',
                 'period_end',
@@ -76,6 +77,9 @@ class CarbonReportsApiTest extends TestCase
                 'status',
             ]
         ]);
+        $response->assertJsonMissingPath('data.company_id');
+        $response->assertJsonMissingPath('data.generated_by_user_id');
+        $response->assertJsonMissingPath('data.summary');
 
         $this->assertDatabaseHas('carbon_reports', [
             'company_id' => $company->id,
@@ -94,10 +98,20 @@ class CarbonReportsApiTest extends TestCase
         $response = $this->getJson("/api/v1/carbon-reports/{$report->id}");
 
         $response->assertOk();
-        $response->assertJsonFragment([
-            'id' => $report->id,
-            'title' => $report->title,
+        $response->assertJsonStructure([
+            'data' => [
+                'id',
+                'title',
+                'period_start',
+                'period_end',
+                'total_waste_kg',
+                'total_emissions_kg',
+                'status',
+            ]
         ]);
+        $response->assertJsonMissingPath('data.company_id');
+        $response->assertJsonMissingPath('data.generated_by_user_id');
+        $response->assertJsonMissingPath('data.summary');
     }
 
     public function test_user_cannot_access_other_company_carbon_report(): void

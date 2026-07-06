@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\WasteRecordResource;
 use App\Models\WasteRecord;
 use App\Services\WasteRecordService;
 use Illuminate\Http\JsonResponse;
@@ -17,20 +18,14 @@ class WasteRecordController extends Controller
     {
         $records = $this->service->listByCompany($request->user()->company);
 
-        return response()->json([
-            'data' => $records->items(),
-            'meta' => [
-                'total' => $records->total(),
-                'per_page' => $records->perPage(),
-                'current_page' => $records->currentPage(),
-            ]
-        ]);
+        return WasteRecordResource::collection($records)->response();
     }
 
     public function show(Request $request, WasteRecord $wasteRecord): JsonResponse
     {
         $this->authorize('view', $wasteRecord);
-        return response()->json(['data' => $wasteRecord]);
+
+        return (new WasteRecordResource($wasteRecord))->response();
     }
 
     public function store(Request $request): JsonResponse
@@ -49,7 +44,7 @@ class WasteRecordController extends Controller
             $validated
         );
 
-        return response()->json(['data' => $record], Response::HTTP_CREATED);
+        return (new WasteRecordResource($record))->response()->setStatusCode(Response::HTTP_CREATED);
     }
 
     public function update(Request $request, WasteRecord $wasteRecord): JsonResponse
@@ -65,7 +60,8 @@ class WasteRecordController extends Controller
         ]);
 
         $record = $this->service->update($wasteRecord, $validated);
-        return response()->json(['data' => $record]);
+
+        return (new WasteRecordResource($record))->response();
     }
 
     public function destroy(Request $request, WasteRecord $wasteRecord): Response
