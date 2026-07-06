@@ -12,3 +12,6 @@ Route::prefix('v1')
         Route::apiResource('waste-records', WasteRecordController::class);
         Route::apiResource('carbon-reports', CarbonReportController::class);
     });
+
+Route::middleware(['auth:sanctum', 'company.context'])
+    ->post('/reports/generate', [CarbonReportController::class, 'generate']);
