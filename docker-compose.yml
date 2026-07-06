@@ -11,6 +11,7 @@ services:
     depends_on:
       - mysql
       - redis
+      - mailhog
     networks:
       - ecotrack
 
@@ -48,6 +49,15 @@ services:
     container_name: ecotrack-redis
     ports:
       - "6379:6379"
+    networks:
+      - ecotrack
+
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: ecotrack-mailhog
+    ports:
+      - "8025:8025"
+      - "1025:1025"
     networks:
       - ecotrack
 

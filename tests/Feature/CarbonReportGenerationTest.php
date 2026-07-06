@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Events\CarbonReportGenerated;
 use App\Jobs\GenerateCarbonReportJob;
+use App\Mail\CarbonReportGeneratedMail;
 use App\Models\CarbonReport;
 use App\Models\Company;
 use App\Models\User;
@@ -11,6 +12,7 @@ use App\Models\WasteRecord;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Queue;
 use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
@@ -160,11 +162,12 @@ class CarbonReportGenerationTest extends TestCase
         });
     }
 
-    public function test_notification_listener_logs_simulation(): void
+    public function test_notification_listener_sends_email(): void
     {
-        $logSpy = Log::spy();
+        Mail::fake();
 
         $company = Company::factory()->create();
+        $user = User::factory()->create(['company_id' => $company->id]);
         $report = CarbonReport::create([
             'company_id' => $company->id,
             'title' => 'Test Report',
@@ -175,11 +178,8 @@ class CarbonReportGenerationTest extends TestCase
 
         event(new CarbonReportGenerated($report));
 
-        $logSpy->shouldHaveReceived('info')
-            ->withArgs(function ($message) {
-                return str_contains($message, 'Simulating email notification sent for carbon report')
-                    && str_contains($message, 'Test Report')
-                    && str_contains($message, 'Company ID:');
-            });
+        Mail::assertSent(CarbonReportGeneratedMail::class, function ($mail) use ($user, $report) {
+            return $mail->hasTo($user->email) && $mail->report->id === $report->id;
+        });
     }
 }

@@ -3,17 +3,26 @@
 namespace App\Listeners;
 
 use App\Events\CarbonReportGenerated;
-use Illuminate\Support\Facades\Log;
+use App\Mail\CarbonReportGeneratedMail;
+use Illuminate\Support\Facades\Mail;
 
 class SendCarbonReportNotification
 {
     public function handle(CarbonReportGenerated $event): void
     {
-        Log::info(sprintf(
-            'Simulating email notification sent for carbon report: %d (Title: %s, Company ID: %d)',
-            $event->report->id,
-            $event->report->title,
-            $event->report->company_id
-        ));
+        $report = $event->report;
+        
+        $report->load('company');
+        $company = $report->company;
+
+        if ($company) {
+            $users = $company->users()
+                ->withoutGlobalScope(\App\Scopes\CompanyScope::class)
+                ->get();
+
+            foreach ($users as $user) {
+                Mail::to($user->email)->send(new CarbonReportGeneratedMail($report));
+            }
+        }
     }
 }
