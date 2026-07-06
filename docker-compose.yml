@@ -31,7 +31,7 @@ services:
   mysql:
     image: mysql:8.4
     container_name: ecotrack-mysql
-    command: --default-authentication-plugin=mysql_native_password
+    command: --mysql-native-password=ON
     environment:
       MYSQL_DATABASE: ecotrack
       MYSQL_USER: ecotrack
