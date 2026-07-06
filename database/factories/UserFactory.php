@@ -31,4 +31,18 @@ class UserFactory extends Factory
             'role' => 'admin',
         ]);
     }
+
+    public function colaborador(): static
+    {
+        return $this->state(fn (): array => [
+            'role' => 'colaborador',
+        ]);
+    }
+
+    public function auditor(): static
+    {
+        return $this->state(fn (): array => [
+            'role' => 'auditor',
+        ]);
+    }
 }

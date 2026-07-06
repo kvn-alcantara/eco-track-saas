@@ -2,8 +2,10 @@
 
 namespace App\Providers;
 
+use App\Models\AuditLog;
 use App\Models\CarbonReport;
 use App\Models\WasteRecord;
+use App\Policies\AuditLogPolicy;
 use App\Policies\CarbonReportPolicy;
 use App\Policies\WasteRecordPolicy;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
@@ -18,6 +20,7 @@ class AuthServiceProvider extends ServiceProvider
     protected $policies = [
         WasteRecord::class => WasteRecordPolicy::class,
         CarbonReport::class => CarbonReportPolicy::class,
+        AuditLog::class => AuditLogPolicy::class,
     ];
 
     /**
