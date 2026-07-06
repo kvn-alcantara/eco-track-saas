@@ -1,0 +1,46 @@
+{
+  "name": "kevin/eco-track-saas",
+  "type": "project",
+  "description": "EcoTrack SaaS - Laravel MVP for environmental and carbon footprint management.",
+  "require": {
+    "php": "^8.5",
+    "laravel/framework": "^13.0",
+    "laravel/sanctum": "^4.0"
+  },
+  "require-dev": {
+    "fakerphp/faker": "^1.23",
+    "laravel/pint": "^1.18",
+    "mockery/mockery": "^1.6",
+    "nunomaduro/collision": "^8.6",
+    "phpunit/phpunit": "^11.5"
+  },
+  "autoload": {
+    "psr-4": {
+      "App\\": "app/",
+      "Database\\Factories\\": "database/factories/",
+      "Database\\Seeders\\": "database/seeders/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Tests\\": "tests/"
+    }
+  },
+  "scripts": {
+    "post-autoload-dump": [
+      "Illuminate\\Foundation\\ComposerScripts::postAutoloadDump",
+      "@php artisan package:discover --ansi"
+    ],
+    "post-root-package-install": [
+      "@php -r \"file_exists('.env') || copy('.env.example', '.env');\""
+    ],
+    "dev": [
+      "php artisan serve --host=0.0.0.0 --port=8000"
+    ],
+    "test": [
+      "@php artisan test"
+    ]
+  },
+  "minimum-stability": "stable",
+  "prefer-stable": true
+}
