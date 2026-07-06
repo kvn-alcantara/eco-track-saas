@@ -11,6 +11,8 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 
+use App\Http\Requests\GenerateCarbonReportRequest;
+
 class CarbonReportController extends Controller
 {
     public function __construct(private CarbonReportService $service) {}
@@ -38,5 +40,19 @@ class CarbonReportController extends Controller
         );
 
         return (new CarbonReportResource($report))->response()->setStatusCode(Response::HTTP_CREATED);
+    }
+
+    public function generate(GenerateCarbonReportRequest $request): JsonResponse
+    {
+        $report = $this->service->generate(
+            $request->user()->company,
+            $request->user(),
+            $request->validated()
+        );
+
+        return response()->json([
+            'message' => 'Seu relatório está sendo processado',
+            'data' => new CarbonReportResource($report),
+        ], Response::HTTP_ACCEPTED);
     }
 }
