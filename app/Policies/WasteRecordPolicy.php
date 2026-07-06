@@ -7,27 +7,30 @@ use App\Models\WasteRecord;
 
 class WasteRecordPolicy
 {
-    /**
-     * Determine whether the user can view the model.
-     */
+    public function viewAny(User $user): bool
+    {
+        return (bool) $user->company_id;
+    }
+
     public function view(User $user, WasteRecord $wasteRecord): bool
     {
         return $user->company_id === $wasteRecord->company_id;
     }
 
-    /**
-     * Determine whether the user can update the model.
-     */
-    public function update(User $user, WasteRecord $wasteRecord): bool
+    public function create(User $user): bool
     {
-        return $user->company_id === $wasteRecord->company_id;
+        return (bool) $user->company_id && $user->role->canCreateWaste();
     }
 
-    /**
-     * Determine whether the user can delete the model.
-     */
+    public function update(User $user, WasteRecord $wasteRecord): bool
+    {
+        return $user->company_id === $wasteRecord->company_id
+            && $user->role->canUpdateWaste();
+    }
+
     public function delete(User $user, WasteRecord $wasteRecord): bool
     {
-        return $user->company_id === $wasteRecord->company_id;
+        return $user->company_id === $wasteRecord->company_id
+            && $user->role->canDeleteWaste();
     }
 }

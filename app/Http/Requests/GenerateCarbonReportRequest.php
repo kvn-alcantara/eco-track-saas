@@ -2,13 +2,14 @@
 
 namespace App\Http\Requests;
 
+use App\Models\CarbonReport;
 use Illuminate\Foundation\Http\FormRequest;
 
 class GenerateCarbonReportRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true;
+        return $this->user()->can('generate', CarbonReport::class);
     }
 
     public function rules(): array

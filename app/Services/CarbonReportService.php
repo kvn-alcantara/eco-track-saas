@@ -8,6 +8,7 @@ use App\Models\Company;
 use App\Models\User;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Carbon;
+use Illuminate\Validation\ValidationException;
 
 class CarbonReportService
 {
@@ -60,5 +61,30 @@ class CarbonReportService
         GenerateCarbonReportJob::dispatch($report);
 
         return $report;
+    }
+
+    public function approve(CarbonReport $report, User $approver): CarbonReport
+    {
+        if ($report->status === 'approved') {
+            throw ValidationException::withMessages([
+                'status' => ['Este relatório já foi aprovado.'],
+            ]);
+        }
+
+        if (! in_array($report->status, ['completed', 'generated'], true)) {
+            throw ValidationException::withMessages([
+                'status' => ['Somente relatórios concluídos ou gerados podem ser aprovados.'],
+            ]);
+        }
+
+        $report->update([
+            'status' => 'approved',
+            'summary' => array_merge($report->summary ?? [], [
+                'approved_at' => now()->toIso8601String(),
+                'approved_by_user_id' => $approver->id,
+            ]),
+        ]);
+
+        return $report->fresh();
     }
 }

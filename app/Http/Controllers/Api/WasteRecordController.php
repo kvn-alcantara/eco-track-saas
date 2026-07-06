@@ -18,6 +18,8 @@ class WasteRecordController extends Controller
 
     public function index(Request $request): JsonResponse
     {
+        $this->authorize('viewAny', WasteRecord::class);
+
         $records = $this->service->listByCompany($request->user()->company);
 
         return WasteRecordResource::collection($records)->response();
@@ -32,6 +34,8 @@ class WasteRecordController extends Controller
 
     public function store(StoreWasteRecordRequest $request): JsonResponse
     {
+        $this->authorize('create', WasteRecord::class);
+
         $record = $this->service->create(
             $request->user()->company,
             $request->user(),
