@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Events\CarbonReportGenerated;
 use App\Jobs\GenerateCarbonReportJob;
+use App\Mail\CarbonReportGeneratedMail;
 use App\Models\CarbonReport;
 use App\Models\Company;
 use App\Models\User;
@@ -11,6 +12,7 @@ use App\Models\WasteRecord;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Queue;
 use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
@@ -21,7 +23,7 @@ class CarbonReportGenerationTest extends TestCase
 
     public function test_unauthenticated_user_cannot_trigger_report_generation(): void
     {
-        $response = $this->postJson('/api/reports/generate', [
+        $response = $this->postJson('/api/v1/reports/generate', [
             'title' => 'Anual 2026',
             'period_start' => '2026-01-01',
             'period_end' => '2026-12-31',
@@ -39,7 +41,7 @@ class CarbonReportGenerationTest extends TestCase
 
         Sanctum::actingAs($user);
 
-        $response = $this->postJson('/api/reports/generate', [
+        $response = $this->postJson('/api/v1/reports/generate', [
             'title' => 'Anual 2026',
             'period_start' => '2026-01-01',
             'period_end' => '2026-12-31',
@@ -77,12 +79,12 @@ class CarbonReportGenerationTest extends TestCase
         Sanctum::actingAs($user);
 
         // Missing fields
-        $response = $this->postJson('/api/reports/generate', []);
+        $response = $this->postJson('/api/v1/reports/generate', []);
         $response->assertStatus(422);
         $response->assertJsonValidationErrors(['title', 'period_start', 'period_end']);
 
         // End date before start date
-        $response = $this->postJson('/api/reports/generate', [
+        $response = $this->postJson('/api/v1/reports/generate', [
             'title' => 'Anual 2026',
             'period_start' => '2026-12-31',
             'period_end' => '2026-01-01',
@@ -160,11 +162,12 @@ class CarbonReportGenerationTest extends TestCase
         });
     }
 
-    public function test_notification_listener_logs_simulation(): void
+    public function test_notification_listener_sends_email(): void
     {
-        $logSpy = Log::spy();
+        Mail::fake();
 
         $company = Company::factory()->create();
+        $user = User::factory()->create(['company_id' => $company->id]);
         $report = CarbonReport::create([
             'company_id' => $company->id,
             'title' => 'Test Report',
@@ -175,11 +178,8 @@ class CarbonReportGenerationTest extends TestCase
 
         event(new CarbonReportGenerated($report));
 
-        $logSpy->shouldHaveReceived('info')
-            ->withArgs(function ($message) {
-                return str_contains($message, 'Simulating email notification sent for carbon report')
-                    && str_contains($message, 'Test Report')
-                    && str_contains($message, 'Company ID:');
-            });
+        Mail::assertSent(CarbonReportGeneratedMail::class, function ($mail) use ($user, $report) {
+            return $mail->hasTo($user->email) && $mail->report->id === $report->id;
+        });
     }
 }
