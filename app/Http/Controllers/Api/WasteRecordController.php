@@ -45,7 +45,7 @@ class WasteRecordController extends Controller
     {
         $this->authorize('update', $wasteRecord);
 
-        $record = $this->service->update($wasteRecord, $request->validated());
+        $record = $this->service->update($wasteRecord, $request->validated(), $request->user());
 
         return (new WasteRecordResource($record))->response();
     }
@@ -53,7 +53,7 @@ class WasteRecordController extends Controller
     public function destroy(Request $request, WasteRecord $wasteRecord): Response
     {
         $this->authorize('delete', $wasteRecord);
-        $this->service->delete($wasteRecord);
+        $this->service->delete($wasteRecord, $request->user());
         return response()->noContent();
     }
 }

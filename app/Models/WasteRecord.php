@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\WasteType;
 use App\Models\Concerns\BelongsToCompany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -26,6 +27,7 @@ class WasteRecord extends Model
     protected function casts(): array
     {
         return [
+            'waste_type' => WasteType::class,
             'quantity_kg' => 'decimal:2',
             'co2e_kg' => 'decimal:2',
             'occurred_at' => 'datetime',

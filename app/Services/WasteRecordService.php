@@ -6,9 +6,12 @@ use App\Models\Company;
 use App\Models\User;
 use App\Models\WasteRecord;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\DB;
 
 class WasteRecordService
 {
+    public function __construct(private AuditLogService $auditLogService) {}
+
     public function listByCompany(Company $company, int $perPage = 15): LengthAwarePaginator
     {
         return WasteRecord::where('company_id', $company->id)
@@ -33,14 +36,66 @@ class WasteRecordService
         ]);
     }
 
-    public function update(WasteRecord $wasteRecord, array $data): WasteRecord
+    public function update(WasteRecord $wasteRecord, array $data, ?User $actor = null): WasteRecord
     {
-        $wasteRecord->update($data);
-        return $wasteRecord->fresh();
+        return DB::transaction(function () use ($wasteRecord, $data, $actor): WasteRecord {
+            $beforeState = $wasteRecord->only([
+                'waste_type',
+                'quantity_kg',
+                'co2e_kg',
+                'occurred_at',
+                'notes',
+                'audit_snapshot',
+            ]);
+
+            $wasteRecord->update($data);
+
+            $freshRecord = $wasteRecord->fresh() ?? $wasteRecord;
+
+            $this->auditLogService->recordWasteRecordChange(
+                $freshRecord,
+                $actor,
+                'updated',
+                $beforeState,
+                $freshRecord->only([
+                    'waste_type',
+                    'quantity_kg',
+                    'co2e_kg',
+                    'occurred_at',
+                    'notes',
+                    'audit_snapshot',
+                ]),
+                [
+                    'changed_fields' => array_keys($data),
+                ]
+            );
+
+            return $freshRecord;
+        });
     }
 
-    public function delete(WasteRecord $wasteRecord): void
+    public function delete(WasteRecord $wasteRecord, ?User $actor = null): void
     {
-        $wasteRecord->delete();
+        DB::transaction(function () use ($wasteRecord, $actor): void {
+            $beforeState = $wasteRecord->only([
+                'waste_type',
+                'quantity_kg',
+                'co2e_kg',
+                'occurred_at',
+                'notes',
+                'audit_snapshot',
+            ]);
+
+            $this->auditLogService->recordWasteRecordChange(
+                $wasteRecord,
+                $actor,
+                'deleted',
+                $beforeState,
+                [],
+                []
+            );
+
+            $wasteRecord->delete();
+        });
     }
 }

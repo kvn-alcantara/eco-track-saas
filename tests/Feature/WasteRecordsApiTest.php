@@ -141,6 +141,13 @@ class WasteRecordsApiTest extends TestCase
             'quantity_kg' => 200.0,
             'notes' => 'Updated notes',
         ]);
+        $this->assertDatabaseHas('audit_logs', [
+            'company_id' => $company->id,
+            'user_id' => $user->id,
+            'action' => 'updated',
+            'auditable_type' => WasteRecord::class,
+            'auditable_id' => $record->id,
+        ]);
     }
 
     public function test_authenticated_user_can_delete_waste_record(): void
@@ -155,6 +162,13 @@ class WasteRecordsApiTest extends TestCase
 
         $response->assertNoContent();
         $this->assertModelMissing($record);
+        $this->assertDatabaseHas('audit_logs', [
+            'company_id' => $company->id,
+            'user_id' => $user->id,
+            'action' => 'deleted',
+            'auditable_type' => WasteRecord::class,
+            'auditable_id' => $record->id,
+        ]);
     }
 
     public function test_user_cannot_access_other_company_waste_record(): void
