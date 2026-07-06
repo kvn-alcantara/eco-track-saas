@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Jobs\GenerateCarbonReportJob;
 use App\Models\CarbonReport;
 use App\Models\Company;
 use App\Models\User;
@@ -35,5 +36,29 @@ class CarbonReportService
                 'generated_at' => now()->toIso8601String(),
             ],
         ]);
+    }
+
+    public function generate(Company $company, User $generatedBy, array $data): CarbonReport
+    {
+        $periodStart = Carbon::parse($data['period_start'])->startOfDay();
+        $periodEnd = Carbon::parse($data['period_end'])->endOfDay();
+
+        $report = CarbonReport::create([
+            'company_id' => $company->id,
+            'generated_by_user_id' => $generatedBy->id,
+            'title' => $data['title'],
+            'period_start' => $periodStart,
+            'period_end' => $periodEnd,
+            'total_waste_kg' => 0.0,
+            'total_emissions_kg' => 0.0,
+            'status' => 'processing',
+            'summary' => [
+                'requested_at' => now()->toIso8601String(),
+            ],
+        ]);
+
+        GenerateCarbonReportJob::dispatch($report);
+
+        return $report;
     }
 }

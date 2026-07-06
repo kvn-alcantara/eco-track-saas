@@ -12,8 +12,6 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 
 use App\Http\Requests\GenerateCarbonReportRequest;
-use App\Jobs\GenerateCarbonReportJob;
-use Illuminate\Support\Carbon;
 
 class CarbonReportController extends Controller
 {
@@ -46,23 +44,11 @@ class CarbonReportController extends Controller
 
     public function generate(GenerateCarbonReportRequest $request): JsonResponse
     {
-        $validated = $request->validated();
-
-        $report = CarbonReport::create([
-            'company_id' => $request->user()->company_id,
-            'generated_by_user_id' => $request->user()->id,
-            'title' => $validated['title'],
-            'period_start' => Carbon::parse($validated['period_start'])->startOfDay(),
-            'period_end' => Carbon::parse($validated['period_end'])->endOfDay(),
-            'total_waste_kg' => 0.0,
-            'total_emissions_kg' => 0.0,
-            'status' => 'processing',
-            'summary' => [
-                'requested_at' => now()->toIso8601String(),
-            ],
-        ]);
-
-        GenerateCarbonReportJob::dispatch($report);
+        $report = $this->service->generate(
+            $request->user()->company,
+            $request->user(),
+            $request->validated()
+        );
 
         return response()->json([
             'message' => 'Seu relatório está sendo processado',
