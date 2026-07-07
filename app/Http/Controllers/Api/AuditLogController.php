@@ -11,7 +11,7 @@ use Illuminate\Http\Request;
 
 class AuditLogController extends Controller
 {
-    public function __construct(private AuditLogService $service) {}
+    public function __construct(private readonly AuditLogService $service) {}
 
     public function index(Request $request): JsonResponse
     {
@@ -26,6 +26,6 @@ class AuditLogController extends Controller
     {
         $this->authorize('view', $auditLog);
 
-        return (new AuditLogResource($auditLog))->response();
+        return new AuditLogResource($auditLog)->response();
     }
 }
