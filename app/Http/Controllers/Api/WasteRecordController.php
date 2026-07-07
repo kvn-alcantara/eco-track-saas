@@ -29,7 +29,7 @@ class WasteRecordController extends Controller
     {
         $this->authorize('view', $wasteRecord);
 
-        return (new WasteRecordResource($wasteRecord))->response();
+        return new WasteRecordResource($wasteRecord)->response();
     }
 
     public function store(StoreWasteRecordRequest $request): JsonResponse
@@ -42,7 +42,7 @@ class WasteRecordController extends Controller
             $request->validated()
         );
 
-        return (new WasteRecordResource($record))->response()->setStatusCode(Response::HTTP_CREATED);
+        return new WasteRecordResource($record)->response()->setStatusCode(Response::HTTP_CREATED);
     }
 
     public function update(UpdateWasteRecordRequest $request, WasteRecord $wasteRecord): JsonResponse
@@ -51,7 +51,7 @@ class WasteRecordController extends Controller
 
         $record = $this->service->update($wasteRecord, $request->validated(), $request->user());
 
-        return (new WasteRecordResource($record))->response();
+        return new WasteRecordResource($record)->response();
     }
 
     public function destroy(Request $request, WasteRecord $wasteRecord): Response

@@ -4,6 +4,7 @@ namespace App\Listeners;
 
 use App\Events\CarbonReportGenerated;
 use App\Mail\CarbonReportGeneratedMail;
+use App\Scopes\CompanyScope;
 use Illuminate\Support\Facades\Mail;
 
 class SendCarbonReportNotification
@@ -17,7 +18,7 @@ class SendCarbonReportNotification
 
         if ($company) {
             $users = $company->users()
-                ->withoutGlobalScope(\App\Scopes\CompanyScope::class)
+                ->withoutGlobalScope(CompanyScope::class)
                 ->get();
 
             foreach ($users as $user) {
