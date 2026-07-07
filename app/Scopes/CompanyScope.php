@@ -20,6 +20,8 @@ class CompanyScope implements Scope
             return;
         }
 
-        $builder->where($model->qualifyColumn(config('tenancy.tenant_key', 'company_id')), $companyId);
+        config('tenancy.tenant_key', 'company_id')
+            |> $model(...)
+            |> (fn($x) => $builder->where($x, $companyId));
     }
 }

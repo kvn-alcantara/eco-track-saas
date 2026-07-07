@@ -9,13 +9,13 @@ use App\Models\CarbonReport;
 use App\Services\CarbonReportService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\Response;
 
 use App\Http\Requests\GenerateCarbonReportRequest;
+use Symfony\Component\HttpFoundation\Response as ResponseAlias;
 
 class CarbonReportController extends Controller
 {
-    public function __construct(private CarbonReportService $service) {}
+    public function __construct(private readonly CarbonReportService $service) {}
 
     public function index(Request $request): JsonResponse
     {
@@ -30,7 +30,7 @@ class CarbonReportController extends Controller
     {
         $this->authorize('view', $carbonReport);
 
-        return (new CarbonReportResource($carbonReport))->response();
+        return new CarbonReportResource($carbonReport)->response();
     }
 
     public function store(StoreCarbonReportRequest $request): JsonResponse
@@ -43,7 +43,7 @@ class CarbonReportController extends Controller
             $request->validated()
         );
 
-        return (new CarbonReportResource($report))->response()->setStatusCode(Response::HTTP_CREATED);
+        return new CarbonReportResource($report)->response()->setStatusCode(ResponseAlias::HTTP_CREATED);
     }
 
     public function generate(GenerateCarbonReportRequest $request): JsonResponse
@@ -59,7 +59,7 @@ class CarbonReportController extends Controller
         return response()->json([
             'message' => 'Seu relatório está sendo processado',
             'data' => new CarbonReportResource($report),
-        ], Response::HTTP_ACCEPTED);
+        ], ResponseAlias::HTTP_ACCEPTED);
     }
 
     public function approve(Request $request, CarbonReport $carbonReport): JsonResponse
@@ -68,6 +68,6 @@ class CarbonReportController extends Controller
 
         $report = $this->service->approve($carbonReport, $request->user());
 
-        return (new CarbonReportResource($report))->response();
+        return new CarbonReportResource($report)->response();
     }
 }

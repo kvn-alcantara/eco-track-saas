@@ -6,7 +6,7 @@ use App\Enums\WasteType;
 
 class CarbonFootprintCalculator
 {
-    private const FACTORS = [
+    private const array FACTORS = [
         WasteType::General->value => 1.00,
         WasteType::Recyclable->value => 0.35,
         WasteType::Organic->value => 0.75,

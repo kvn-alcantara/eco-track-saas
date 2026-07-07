@@ -19,7 +19,7 @@ class WasteRecordPolicy
 
     public function create(User $user): bool
     {
-        return (bool) $user->company_id && $user->role->canCreateWaste();
+        return $user->company_id && $user->role->canCreateWaste();
     }
 
     public function update(User $user, WasteRecord $wasteRecord): bool
