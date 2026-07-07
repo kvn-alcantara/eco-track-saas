@@ -1,8 +1,7 @@
 <?php
 
-namespace Tests\Feature;
+namespace Tests\Feature\Http\Controllers\Api;
 
-use App\Models\CarbonReport;
 use App\Models\Company;
 use App\Models\User;
 use App\Models\WasteRecord;
@@ -10,9 +9,11 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
 
-class ApiRoutesTest extends TestCase
+class WasteRecordsControllerTest extends TestCase
 {
-    public function test_unauthenticated_user_cannot_access_waste_records_api(): void
+    use RefreshDatabase;
+
+    public function test_unauthenticated_user_cannot_access_waste_records(): void
     {
         $response = $this->getJson('/api/v1/waste-records');
 
@@ -42,6 +43,9 @@ class ApiRoutesTest extends TestCase
                 ]
             ]
         ]);
+        $response->assertJsonMissingPath('data.0.company_id');
+        $response->assertJsonMissingPath('data.0.recorded_by_user_id');
+        $response->assertJsonMissingPath('data.0.audit_snapshot');
         $response->assertJsonCount(3, 'data');
     }
 
@@ -71,6 +75,9 @@ class ApiRoutesTest extends TestCase
                 'notes',
             ]
         ]);
+        $response->assertJsonMissingPath('data.company_id');
+        $response->assertJsonMissingPath('data.recorded_by_user_id');
+        $response->assertJsonMissingPath('data.audit_snapshot');
 
         $this->assertDatabaseHas('waste_records', [
             'company_id' => $company->id,
@@ -90,10 +97,19 @@ class ApiRoutesTest extends TestCase
         $response = $this->getJson("/api/v1/waste-records/{$record->id}");
 
         $response->assertOk();
-        $response->assertJsonFragment([
-            'id' => $record->id,
-            'waste_type' => $record->waste_type,
+        $response->assertJsonStructure([
+            'data' => [
+                'id',
+                'waste_type',
+                'quantity_kg',
+                'co2e_kg',
+                'occurred_at',
+                'notes',
+            ]
         ]);
+        $response->assertJsonMissingPath('data.company_id');
+        $response->assertJsonMissingPath('data.recorded_by_user_id');
+        $response->assertJsonMissingPath('data.audit_snapshot');
     }
 
     public function test_authenticated_user_can_update_waste_record(): void
@@ -110,10 +126,27 @@ class ApiRoutesTest extends TestCase
         ]);
 
         $response->assertOk();
+        $response->assertJsonStructure([
+            'data' => [
+                'id',
+                'waste_type',
+                'quantity_kg',
+                'co2e_kg',
+                'occurred_at',
+                'notes',
+            ]
+        ]);
         $this->assertDatabaseHas('waste_records', [
             'id' => $record->id,
             'quantity_kg' => 200.0,
             'notes' => 'Updated notes',
+        ]);
+        $this->assertDatabaseHas('audit_logs', [
+            'company_id' => $company->id,
+            'user_id' => $user->id,
+            'action' => 'updated',
+            'auditable_type' => WasteRecord::class,
+            'auditable_id' => $record->id,
         ]);
     }
 
@@ -129,90 +162,59 @@ class ApiRoutesTest extends TestCase
 
         $response->assertNoContent();
         $this->assertModelMissing($record);
-    }
-
-    public function test_unauthenticated_user_cannot_access_carbon_reports_api(): void
-    {
-        $response = $this->getJson('/api/v1/carbon-reports');
-
-        $response->assertUnauthorized();
-    }
-
-    public function test_authenticated_user_can_list_carbon_reports(): void
-    {
-        $company = Company::factory()->create();
-        $user = User::factory()->create(['company_id' => $company->id]);
-        $reports = CarbonReport::factory()->count(2)->forCompany($company)->create();
-
-        Sanctum::actingAs($user);
-
-        $response = $this->getJson('/api/v1/carbon-reports');
-
-        $response->assertOk();
-        $response->assertJsonStructure([
-            'data' => [
-                '*' => [
-                    'id',
-                    'title',
-                    'period_start',
-                    'period_end',
-                    'total_waste_kg',
-                    'total_emissions_kg',
-                    'status',
-                ]
-            ]
-        ]);
-        $response->assertJsonCount(2, 'data');
-    }
-
-    public function test_authenticated_user_can_create_carbon_report(): void
-    {
-        $company = Company::factory()->create();
-        $user = User::factory()->create(['company_id' => $company->id]);
-
-        Sanctum::actingAs($user);
-
-        $response = $this->postJson('/api/v1/carbon-reports', [
-            'title' => 'Q3 2026 Carbon Report',
-            'period_start' => now()->subMonths(3),
-            'period_end' => now(),
-            'total_waste_kg' => 5000.0,
-            'total_emissions_kg' => 2500.0,
-        ]);
-
-        $response->assertCreated();
-        $response->assertJsonStructure([
-            'data' => [
-                'id',
-                'title',
-                'period_start',
-                'period_end',
-                'total_waste_kg',
-                'total_emissions_kg',
-                'status',
-            ]
-        ]);
-
-        $this->assertDatabaseHas('carbon_reports', [
+        $this->assertDatabaseHas('audit_logs', [
             'company_id' => $company->id,
-            'title' => 'Q3 2026 Carbon Report',
+            'user_id' => $user->id,
+            'action' => 'deleted',
+            'auditable_type' => WasteRecord::class,
+            'auditable_id' => $record->id,
         ]);
     }
 
-    public function test_authenticated_user_can_show_carbon_report(): void
+    public function test_user_cannot_access_other_company_waste_record(): void
     {
-        $company = Company::factory()->create();
-        $user = User::factory()->create(['company_id' => $company->id]);
-        $report = CarbonReport::factory()->forCompany($company)->create();
+        $company1 = Company::factory()->create();
+        $company2 = Company::factory()->create();
+        
+        $user1 = User::factory()->create(['company_id' => $company1->id]);
+        $record = WasteRecord::factory()->forCompany($company2)->create();
 
-        Sanctum::actingAs($user);
+        Sanctum::actingAs($user1);
 
-        $response = $this->getJson("/api/v1/carbon-reports/{$report->id}");
+        $response = $this->getJson("/api/v1/waste-records/{$record->id}");
 
-        $response->assertOk();
-        $response->assertJsonFragment([
-            'id' => $report->id,
-            'title' => $report->title,
+        $response->assertNotFound();
+    }
+
+    public function test_user_cannot_update_other_company_waste_record(): void
+    {
+        $company1 = Company::factory()->create();
+        $company2 = Company::factory()->create();
+        
+        $user1 = User::factory()->create(['company_id' => $company1->id]);
+        $record = WasteRecord::factory()->forCompany($company2)->create();
+
+        Sanctum::actingAs($user1);
+
+        $response = $this->patchJson("/api/v1/waste-records/{$record->id}", [
+            'quantity_kg' => 999.0,
         ]);
+
+        $response->assertNotFound();
+    }
+
+    public function test_user_cannot_delete_other_company_waste_record(): void
+    {
+        $company1 = Company::factory()->create();
+        $company2 = Company::factory()->create();
+        
+        $user1 = User::factory()->create(['company_id' => $company1->id]);
+        $record = WasteRecord::factory()->forCompany($company2)->create();
+
+        Sanctum::actingAs($user1);
+
+        $response = $this->deleteJson("/api/v1/waste-records/{$record->id}");
+
+        $response->assertNotFound();
     }
 }

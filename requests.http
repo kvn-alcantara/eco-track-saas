@@ -1,0 +1,165 @@
+### Authentication
+
+# @name Register
+POST {{host}}/api/v1/register
+Content-Type: application/json
+Accept: application/json
+
+{
+  "name": "Jane Doe",
+  "email": "jane@example.com",
+  "password": "password",
+  "password_confirmation": "password",
+  "company_name": "Green Tech"
+}
+
+> {% client.global.set("auth_token", response.body.token); %}
+
+###
+
+# @name Login
+POST {{host}}/api/v1/login
+Content-Type: application/json
+Accept: application/json
+
+{
+  "email": "jane@example.com",
+  "password": "password"
+}
+
+> {% client.global.set("auth_token", response.body.token); %}
+
+###
+
+# @name Logout
+POST {{host}}/api/v1/logout
+Authorization: Bearer {{auth_token}}
+Accept: application/json
+
+###
+
+# @name Get Me
+GET {{host}}/api/v1/me
+Authorization: Bearer {{auth_token}}
+Accept: application/json
+
+###
+
+### Waste Records
+
+# @name List Waste Records
+GET {{host}}/api/v1/waste-records
+Authorization: Bearer {{auth_token}}
+Accept: application/json
+
+###
+
+# @name Store Waste Record
+POST {{host}}/api/v1/waste-records
+Authorization: Bearer {{auth_token}}
+Content-Type: application/json
+Accept: application/json
+
+{
+  "waste_type": "recyclable",
+  "quantity_kg": 50.5,
+  "co2e_kg": 12.3,
+  "occurred_at": "2024-03-20",
+  "notes": "Weekly recycling batch"
+}
+
+###
+
+# @name Show Waste Record
+GET {{host}}/api/v1/waste-records/1
+Authorization: Bearer {{auth_token}}
+Accept: application/json
+
+###
+
+# @name Update Waste Record
+PUT {{host}}/api/v1/waste-records/1
+Authorization: Bearer {{auth_token}}
+Content-Type: application/json
+Accept: application/json
+
+{
+  "quantity_kg": 55.0,
+  "notes": "Updated weight after verification"
+}
+
+###
+
+# @name Delete Waste Record
+DELETE {{host}}/api/v1/waste-records/1
+Authorization: Bearer {{auth_token}}
+Accept: application/json
+
+###
+
+### Carbon Reports
+
+# @name List Carbon Reports
+GET {{host}}/api/v1/carbon-reports
+Authorization: Bearer {{auth_token}}
+Accept: application/json
+
+###
+
+# @name Store Carbon Report (Manual)
+POST {{host}}/api/v1/carbon-reports
+Authorization: Bearer {{auth_token}}
+Content-Type: application/json
+Accept: application/json
+
+{
+  "title": "Q1 2024 Sustainability Report",
+  "period_start": "2024-01-01",
+  "period_end": "2024-03-31",
+  "total_waste_kg": 1500.0,
+  "total_emissions_kg": 450.5
+}
+
+###
+
+# @name Generate Carbon Report (Auto)
+POST {{host}}/api/v1/reports/generate
+Authorization: Bearer {{auth_token}}
+Content-Type: application/json
+Accept: application/json
+
+{
+  "title": "Automated Q1 2024 Report",
+  "period_start": "2024-01-01",
+  "period_end": "2024-03-31"
+}
+
+###
+
+# @name Show Carbon Report
+GET {{host}}/api/v1/carbon-reports/1
+Authorization: Bearer {{auth_token}}
+Accept: application/json
+
+###
+
+# @name Approve Carbon Report
+POST {{host}}/api/v1/carbon-reports/1/approve
+Authorization: Bearer {{auth_token}}
+Accept: application/json
+
+###
+
+### Audit Logs
+
+# @name List Audit Logs
+GET {{host}}/api/v1/audit-logs
+Authorization: Bearer {{auth_token}}
+Accept: application/json
+
+###
+
+# @name Show Audit Log
+GET {{host}}/api/v1/audit-logs/1
+Authorization: Bearer {{auth_token}}
+Accept: application/json
