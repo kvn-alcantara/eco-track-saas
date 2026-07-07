@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\Feature;
+namespace Tests\Feature\Http\Controllers\Api;
 
 use App\Models\CarbonReport;
 use App\Models\Company;
@@ -9,7 +9,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
 
-class CarbonReportsApiTest extends TestCase
+class CarbonReportsControllerTest extends TestCase
 {
     use RefreshDatabase;
 

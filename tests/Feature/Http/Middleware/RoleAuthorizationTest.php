@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\Feature;
+namespace Tests\Feature\Http\Middleware;
 
 use App\Models\AuditLog;
 use App\Models\CarbonReport;
