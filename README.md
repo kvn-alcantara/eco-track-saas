@@ -2,6 +2,8 @@
 
 MVP de uma plataforma B2B para gestão ambiental e cálculo de pegada de carbono. O projeto cobre multi-tenancy por empresa, autenticação via Sanctum, filas Redis, trilha de auditoria e controle de acesso por perfil (Laravel Policies).
 
+<img width="347" height="448" alt="image" src="https://github.com/user-attachments/assets/e97e9f98-b96e-4b00-b24c-7408a5745298" />
+
 ## Stack
 
 - PHP 8.5 + Laravel 13
